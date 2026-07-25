@@ -654,6 +654,10 @@ webview {
   letter-spacing: 0.05em;
   color: var(--muted);
 }
+.legacy-header {
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
 .list-row {
   display: flex;
   align-items: center;

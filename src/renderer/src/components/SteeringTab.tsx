@@ -27,8 +27,11 @@ export default function SteeringTab({
   const [activeId, setActiveId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Every chat, not just steering ones. Chats created before the four-tab
+  // redesign have kind "chat" and had no surface left to live on, which
+  // made them look deleted -- they were only ever hidden.
   const refresh = useCallback(async () => {
-    const res = await call<{ chats: CustosChat[] }>('GET', `/admin/api/projects/${project.id}/chats?kind=steering`)
+    const res = await call<{ chats: CustosChat[] }>('GET', `/admin/api/projects/${project.id}/chats`)
     setChats(res?.chats ?? [])
     setLoading(false)
   }, [call, project.id])
@@ -67,6 +70,8 @@ export default function SteeringTab({
   }
 
   const active = chats.find((c) => c.id === activeId && c.active)
+  const steering = chats.filter((chat) => (chat.kind ?? 'chat') === 'steering')
+  const legacy = chats.filter((chat) => (chat.kind ?? 'chat') !== 'steering')
 
   return (
     <div className="split-pane">
@@ -78,31 +83,24 @@ export default function SteeringTab({
           </button>
         </div>
         {loading && <p className="empty-state">Loading…</p>}
-        {!loading && chats.length === 0 && (
+        {!loading && steering.length === 0 && legacy.length === 0 && (
           <p className="hint">
             Nothing yet. Start a discussion and argue an idea out — the agent will push back, research what it can, and only hand
             something to the roadmap once it holds up.
           </p>
         )}
-        {chats.map((chat) => (
-          <div key={chat.id} className={`list-row${activeId === chat.id ? ' selected' : ''}`} onClick={() => open(chat)}>
-            <span className={`chat-dot${chat.active ? ' active' : ''}`} />
-            <div className="list-row-main">
-              <div className="list-row-title">{chat.title}</div>
-              <div className="list-row-sub">{relativeTime(chat.createdAt)}</div>
-            </div>
-            <button
-              className="icon danger"
-              title="Delete"
-              onClick={(e) => {
-                e.stopPropagation()
-                remove(chat)
-              }}
-            >
-              ×
-            </button>
-          </div>
+        {steering.map((chat) => (
+          <ChatRow key={chat.id} chat={chat} selected={activeId === chat.id} onOpen={() => open(chat)} onDelete={() => remove(chat)} />
         ))}
+
+        {legacy.length > 0 && (
+          <>
+            <div className="split-list-header legacy-header">Older chats</div>
+            {legacy.map((chat) => (
+              <ChatRow key={chat.id} chat={chat} selected={activeId === chat.id} onOpen={() => open(chat)} onDelete={() => remove(chat)} />
+            ))}
+          </>
+        )}
       </div>
 
       <div className="split-body">
@@ -122,6 +120,38 @@ export default function SteeringTab({
           ))}
         {!active && <div className="empty-state">Pick a discussion, or start a new one.</div>}
       </div>
+    </div>
+  )
+}
+
+function ChatRow({
+  chat,
+  selected,
+  onOpen,
+  onDelete
+}: {
+  chat: CustosChat
+  selected: boolean
+  onOpen: () => void
+  onDelete: () => void
+}): React.JSX.Element {
+  return (
+    <div className={`list-row${selected ? ' selected' : ''}`} onClick={onOpen}>
+      <span className={`chat-dot${chat.active ? ' active' : ''}`} />
+      <div className="list-row-main">
+        <div className="list-row-title">{chat.title}</div>
+        <div className="list-row-sub">{relativeTime(chat.createdAt)}</div>
+      </div>
+      <button
+        className="icon danger"
+        title="Delete"
+        onClick={(e) => {
+          e.stopPropagation()
+          onDelete()
+        }}
+      >
+        ×
+      </button>
     </div>
   )
 }
