@@ -62,6 +62,14 @@ class CustosClient {
     return this.password
   }
 
+  /** The raw `name=value` session cookie, so the main process can plant it
+   * in Electron's own cookie jar before pointing the window at the server's
+   * hosted UI. Without that the window arrives unauthenticated and bounces
+   * to /login, making the user log in a second time in the same app. */
+  getSessionCookie(): string | null {
+    return this.sessionCookie
+  }
+
   async login(password: string): Promise<{ ok: boolean; error?: string }> {
     if (!this.baseUrl) return { ok: false, error: 'no server configured' }
     try {

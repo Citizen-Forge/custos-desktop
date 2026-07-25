@@ -32,6 +32,8 @@ const custos = {
     return () => ipcRenderer.removeListener('chat:closed', listener)
   },
 
+  openWebUi: (): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke('app:openWebUi'),
+
   watchProject: (projectId: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('pm:watch', projectId),
   unwatchProject: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('pm:unwatch'),
   onPmEvent: (cb: (event: PmEvent) => void): (() => void) => {

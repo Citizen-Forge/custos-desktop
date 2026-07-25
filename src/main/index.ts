@@ -89,6 +89,40 @@ function registerIpc(window: BrowserWindow): void {
     return { ok: true }
   })
 
+  /**
+   * Hands the window over to the UI hosted by Custos itself at /app.
+   *
+   * That build and this one are the same React application -- the only
+   * difference is which implementation of `window.custos` it finds. Served
+   * from the server's own origin it can use plain fetch and WebSocket with
+   * the session cookie, so once the window is there it needs nothing from
+   * this process. The native shell exists to answer "which server, and what
+   * is the password" -- questions that necessarily precede having a URL to
+   * load at all.
+   */
+  ipcMain.handle('app:openWebUi', async () => {
+    const baseUrl = custosClient.getBaseUrl()
+    const cookie = custosClient.getSessionCookie()
+    if (!baseUrl) return { ok: false, error: 'no server configured' }
+    if (!cookie) return { ok: false, error: 'not logged in' }
+
+    const [name, ...rest] = cookie.split('=')
+    try {
+      await window.webContents.session.cookies.set({
+        url: baseUrl,
+        name,
+        value: rest.join('='),
+        httpOnly: true,
+        secure: baseUrl.startsWith('https://')
+      })
+    } catch (err) {
+      return { ok: false, error: `could not set session cookie: ${(err as Error).message}` }
+    }
+
+    await window.loadURL(`${baseUrl}/app`)
+    return { ok: true }
+  })
+
   ipcMain.handle('pm:watch', (_e, projectId: string) => {
     custosClient.openPmSocket(projectId, window)
     return { ok: true }

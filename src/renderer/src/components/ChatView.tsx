@@ -365,7 +365,7 @@ function ToolEntry({ bubble }: { bubble: ToolBubble }): React.JSX.Element {
  * style (the command for Bash, the path for file tools), falling back to
  * compact JSON. Keeps the transcript scannable instead of dumping the whole
  * input object inline for every call. */
-function summarizeToolInput(name: string, input: unknown): string {
+function summarizeToolInput(_name: string, input: unknown): string {
   if (input && typeof input === 'object') {
     const obj = input as Record<string, unknown>
     const primary = obj.command ?? obj.file_path ?? obj.path ?? obj.pattern ?? obj.url ?? obj.prompt
