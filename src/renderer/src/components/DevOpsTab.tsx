@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ActivityResponse, AgentDef, CustosProject, DeployTarget, ProjectSettings, ProviderOption } from '@shared/types'
 import { useCall, relativeTime } from '../api'
+import SecretsPanel from './SecretsPanel'
 
 const AUTONOMY_ROLES: Array<{ key: keyof ProjectSettings['autonomy']; label: string; blurb: string }> = [
   { key: 'product-owner', label: 'Product owner', blurb: 'Plans handed-off ideas into epics and grooms the backlog.' },
@@ -206,6 +207,8 @@ export default function DevOpsTab({
           ))}
         </section>
       </div>
+
+      <SecretsPanel project={project} revision={revision} />
 
       <section className="panel">
         <h2>Agents</h2>

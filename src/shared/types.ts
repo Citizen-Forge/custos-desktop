@@ -227,6 +227,22 @@ export interface ActivityResponse {
   busy: string[];
 }
 
+/** Vault entry as the API exposes it. The value is deliberately absent:
+ * there is no endpoint that returns a stored secret, only its metadata and
+ * the last four characters. */
+export interface SecretSummary {
+  id: string;
+  name: string;
+  description: string;
+  projectId: string | null;
+  exposeToAgents: boolean;
+  useForGit: boolean;
+  hint: string;
+  createdAt: number;
+  updatedAt: number;
+  lastUsedAt: number | null;
+}
+
 /** Notification-only: the client refetches whatever tab it's showing. */
 export type PmEvent =
   | { type: "connected"; projectId: string }

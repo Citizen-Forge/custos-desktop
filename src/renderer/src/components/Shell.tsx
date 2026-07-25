@@ -17,6 +17,10 @@ export default function Shell({ onSessionExpired }: { onSessionExpired: () => vo
   const [projects, setProjects] = useState<CustosProject[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  // Persisted, because a collapsed sidebar is a working preference rather
+  // than a per-session one -- reopening the app with it expanded again
+  // would just mean collapsing it every time.
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === '1')
   const [promptState, setPromptState] = useState<{ request: PromptRequest; resolve: (v: string | null) => void } | null>(null)
 
   const askText = useCallback((title: string, opts: Omit<PromptRequest, 'title'> = {}): Promise<string | null> => {
@@ -75,14 +79,41 @@ export default function Shell({ onSessionExpired }: { onSessionExpired: () => vo
 
   const project = projects.find((p) => p.id === selected)
 
+  function toggleCollapsed(): void {
+    setCollapsed((current) => {
+      localStorage.setItem('sidebarCollapsed', current ? '0' : '1')
+      return !current
+    })
+  }
+
+  // Ctrl/Cmd+B, the same shortcut every editor uses for this.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault()
+        toggleCollapsed()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
     <ApiContext.Provider value={call}>
-      <div className="app-shell">
+      <div className={`app-shell${collapsed ? ' sidebar-collapsed' : ''}`}>
+        {collapsed && (
+          <button className="sidebar-reveal" onClick={toggleCollapsed} title="Show projects (Ctrl+B)">
+            ›
+          </button>
+        )}
         <aside className="sidebar">
           <div className="sidebar-header">
             <h1>Custos</h1>
             <button className="icon" onClick={newProject} title="New project">
               +
+            </button>
+            <button className="icon" onClick={toggleCollapsed} title="Hide projects (Ctrl+B)">
+              ‹
             </button>
           </div>
           {loading && <p className="empty-state">Loading…</p>}
