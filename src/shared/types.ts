@@ -182,6 +182,27 @@ export interface AgentRun {
   costUsd: number | null;
   summary: string;
   error: string | null;
+  /** When this run last produced any event — how a stuck agent is spotted. */
+  lastEventAt: number;
+  /** One line describing what it is doing right now. */
+  currentAction: string | null;
+  toolCalls: number;
+}
+
+export type FactCategory = "repo" | "environment" | "convention" | "docs" | "decision" | "contact";
+
+/** An entry in the project's shared knowledge store, readable by every
+ * agent — how DevOps tells the engineers where the repository is. */
+export interface ProjectFact {
+  id: string;
+  projectId: string;
+  key: string;
+  value: string;
+  category: FactCategory;
+  writtenBy: string;
+  writtenByLabel: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface ProviderOption {
@@ -224,6 +245,8 @@ export interface BoardResponse {
 export interface ActivityResponse {
   runs: AgentRun[];
   active: AgentRun[];
+  /** Runs that have produced no events for a while — surfaced, not killed. */
+  stalledRunIds: string[];
   busy: string[];
 }
 

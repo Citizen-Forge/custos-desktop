@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { ActivityResponse, AgentDef, CustosProject, DeployTarget, ProjectSettings, ProviderOption } from '@shared/types'
 import { useCall, relativeTime } from '../api'
 import SecretsPanel from './SecretsPanel'
+import KnowledgePanel from './KnowledgePanel'
 
 const AUTONOMY_ROLES: Array<{ key: keyof ProjectSettings['autonomy']; label: string; blurb: string }> = [
   { key: 'product-owner', label: 'Product owner', blurb: 'Plans handed-off ideas into epics and grooms the backlog.' },
@@ -208,6 +209,8 @@ export default function DevOpsTab({
         </section>
       </div>
 
+      <KnowledgePanel project={project} settings={settings} revision={revision} onChanged={onChanged} />
+
       <SecretsPanel project={project} revision={revision} />
 
       <section className="panel">
@@ -258,11 +261,26 @@ export default function DevOpsTab({
         <h2>Activity</h2>
         {activity?.active.length ? (
           <div className="running-list">
-            {activity.active.map((run) => (
-              <div key={run.id} className="running-row">
-                <span className="badge working">running</span> {run.role} · started {relativeTime(run.startedAt)}
-              </div>
-            ))}
+            {activity.active.map((run) => {
+              const stalled = activity.stalledRunIds.includes(run.id)
+              return (
+                <div key={run.id} className={`running-row${stalled ? ' stalled' : ''}`}>
+                  <div className="running-head">
+                    <span className={`badge ${stalled ? 'warn' : 'working'}`}>{stalled ? 'no activity' : 'running'}</span>
+                    <strong>{run.role}</strong>
+                    <span className="muted">
+                      {run.providerKey}/{run.model}
+                    </span>
+                    <span className="muted">started {relativeTime(run.startedAt)}</span>
+                    <span className="muted">{run.toolCalls} tool calls</span>
+                  </div>
+                  <div className="running-action">
+                    {run.currentAction ?? 'thinking…'}
+                    <span className="muted"> · last moved {relativeTime(run.lastEventAt)}</span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         ) : null}
         {!activity?.runs.length && <p className="hint">Nothing has run yet.</p>}
