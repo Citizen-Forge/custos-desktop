@@ -32,3 +32,7 @@ src/preload/    contextBridge surface exposed to the renderer as window.custos
 src/renderer/   React UI: project shell and the four tabs
 src/shared/     types mirrored from the gateway's own API
 ```
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE) — free to use, modify and share for any noncommercial purpose. Same terms as [Custos](https://github.com/Citizen-Forge/custos) itself.
